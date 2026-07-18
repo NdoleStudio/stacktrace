@@ -1,7 +1,30 @@
-# Stacktrace [![Circle CI](https://img.shields.io/circleci/project/palantir/stacktrace/master.svg?label=circleci)](https://circleci.com/gh/palantir/stacktrace) [![Travis CI](https://img.shields.io/travis/palantir/stacktrace/master.svg?label=travis)](https://travis-ci.org/palantir/stacktrace)
+# Stacktrace
 
-Look at Palantir, such a Java shop. I can't believe they want stack traces in
-their Go code.
+[![CI](https://github.com/NdoleStudio/stacktrace/actions/workflows/ci.yml/badge.svg)](https://github.com/NdoleStudio/stacktrace/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/NdoleStudio/stacktrace.svg)](https://pkg.go.dev/github.com/NdoleStudio/stacktrace)
+[![License](https://img.shields.io/github/license/NdoleStudio/stacktrace)](LICENSE)
+
+Stacktrace adds compact, contextual call-site information to Go errors.
+
+This repository is an actively maintained fork of
+[palantir/stacktrace](https://github.com/palantir/stacktrace), which has been
+inactive for many years. The fork preserves the original Apache-2.0-licensed
+API while adding current Go tooling and error-chain support.
+
+## Fork features
+
+- [x] Context-rich traces captured at intentional wrapping boundaries
+- [x] Full multiline and brief single-line formatting
+- [x] Error codes and process exit codes
+- [x] Go 1.13-compatible `errors.Is`, `errors.As`, and `errors.Unwrap`
+- [x] Go modules with Go 1.18+ support
+- [x] Cross-platform CI and local pre-commit checks
+
+## Installation
+
+```sh
+go get github.com/NdoleStudio/stacktrace@latest
+```
 
 ### Why would anyone want stack traces in Go code?
 
@@ -62,15 +85,15 @@ func WriteAll(baseDir string, entities []Entity) error {
 
 ## Functions
 
-#### stacktrace.Propagate(cause error, msg string, vals ...interface{}) error
+#### `stacktrace.Propagate(err error, format string, args ...any) error`
 
 Propagate wraps an error to include line number information. This is going to be
 your most common stacktrace call.
 
-As in all of these functions, the `msg` and `vals` work like `fmt.Errorf`.
+As in all of these functions, the `format` and `args` work like `fmt.Errorf`.
 
 The message passed to Propagate should describe the action that failed,
-resulting in `cause`. The canonical call looks like this:
+resulting in `err`. The canonical call looks like this:
 
 <pre>
 result, err := process(arg)
@@ -80,8 +103,8 @@ if err != nil {
 </pre>
 
 To write the message, ask yourself "what does this call do?" What does
-`process(arg)` do? It processes ${arg}, so the message is that we failed to
-process ${arg}.
+`process(arg)` do? It processes `${arg}`, so the message is that we failed to
+process `${arg}`.
 
 Pay attention that the message is not redundant with the one in `err`. In the
 `WriteAll` example above, any error from `os.MkdirAll` will already contain the
@@ -90,7 +113,7 @@ message. However, the error from `os.MkdirAll` will not identify that path as
 corresponding to the "base directory" so we propagate with that information.
 
 If it is not possible to add any useful contextual information beyond what is
-already included in an error, `msg` can be an empty string:
+already included in an error, `format` can be an empty string:
 
 <pre>
 func Something() error {
@@ -105,10 +128,10 @@ func Something() error {
 The purpose of `""` as opposed to a separate function is to make you feel a
 little guilty every time you do this.
 
-This example also illustrates the behavior of Propagate when `cause` is nil
+This example also illustrates the behavior of Propagate when `err` is nil
 &ndash; it returns nil as well. There is no need to check `if err != nil`.
 
-#### stacktrace.NewError(msg string, vals ...interface{}) error
+#### `stacktrace.NewError(format string, args ...any) error`
 
 NewError is a drop-in replacement for `fmt.Errorf` that includes line number
 information. The canonical call looks like this:
@@ -141,9 +164,9 @@ using that. NoCode is the error code of errors with no code explicitly attached.
 
 An ordinary `stacktrace.Propagate` preserves the error code of an error.
 
-#### stacktrace.PropagateWithCode(cause error, code ErrorCode, msg string, vals ...interface{}) error
+#### `stacktrace.PropagateWithCode(err error, code ErrorCode, format string, args ...any) error`
 
-#### stacktrace.NewErrorWithCode(code ErrorCode, msg string, vals ...interface{}) error
+#### `stacktrace.NewErrorWithCode(code ErrorCode, format string, args ...any) error`
 
 PropagateWithCode and NewErrorWithCode are analogous to Propagate and NewError
 but also attach an error code.
@@ -155,7 +178,7 @@ if os.IsNotExist(err) {
 }
 </pre>
 
-#### stacktrace.NewMessageWithCode(code ErrorCode, msg string, vals ...interface{}) error
+#### `stacktrace.NewMessageWithCode(code ErrorCode, format string, args ...any) error`
 
 The error code mechanism can be useful by itself even where stack traces with
 line numbers are not required. NewMessageWithCode returns an error that prints
@@ -168,7 +191,7 @@ if ttl == "" {
 }
 </pre>
 
-#### stacktrace.GetCode(err error) ErrorCode
+#### `stacktrace.GetCode(err error) ErrorCode`
 
 GetCode extracts the error code from an error.
 
@@ -186,17 +209,27 @@ return stacktrace.NewError("timed out after %d attempts", attempts)
 GetCode returns the special value `stacktrace.NoCode` if `err` is nil or if
 there is no error code attached to `err`.
 
+### Standard error unwrapping
+
+Stacktrace errors implement Go's standard `Unwrap() error` contract. Use
+`errors.Is`, `errors.As`, and `errors.Unwrap` to inspect wrapped causes without
+discarding stacktrace context. `RootCause` remains available when the original
+underlying error is needed directly.
+
 ## License
 
-Stacktrace is released by Palantir Technologies, Inc. under the Apache 2.0
-License. See the included [LICENSE](LICENSE) file for details.
+Stacktrace is available under the [Apache License 2.0](LICENSE). The fork
+retains the original Palantir copyright notices and attribution.
 
 ## Contributing
 
-We welcome contributions of backward-compatible changes to this library.
+Contributions are welcome.
 
-- Write your code
-- Add tests for new functionality
-- Run `go test` and verify that the tests pass
-- Fill out the [Individual](https://github.com/palantir/stacktrace/blob/master/Palantir_Individual_Contributor_License_Agreement.pdf?raw=true) or [Corporate](https://github.com/palantir/stacktrace/blob/master/Palantir_Corporate_Contributor_License_Agreement.pdf?raw=true) Contributor License Agreement and send it to [opensource@palantir.com](mailto:opensource@palantir.com)
-- Submit a pull request
+```sh
+go test -race -cover ./...
+go vet ./...
+golangci-lint run
+pre-commit run --all-files
+```
+
+Install repository hooks once with `pre-commit install`.

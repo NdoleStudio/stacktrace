@@ -33,5 +33,7 @@ A stacktrace produced by this package looks like this:
 Note that stack traces are not designed to be user-visible. They can be valuable
 in a log file of a server application, but nobody wants to see one of them in
 CLI output or a web interface or a return value from library code.
+
+Stacktrace is maintained at https://github.com/NdoleStudio/stacktrace.
 */
 package stacktrace
