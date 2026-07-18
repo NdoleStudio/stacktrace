@@ -103,8 +103,8 @@ if err != nil {
 </pre>
 
 To write the message, ask yourself "what does this call do?" What does
-`process(arg)` do? It processes $arg, so the message is that we failed to
-process $arg.
+`process(arg)` do? It processes ${arg}, so the message is that we failed to
+process ${arg}.
 
 Pay attention that the message is not redundant with the one in `err`. In the
 `WriteAll` example above, any error from `os.MkdirAll` will already contain the
