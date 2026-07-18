@@ -6,10 +6,11 @@
 
 Stacktrace adds compact, contextual call-site information to Go errors.
 
-This repository is an actively maintained fork of
-[palantir/stacktrace](https://github.com/palantir/stacktrace), which has been
-inactive for many years. The fork preserves the original Apache-2.0-licensed
-API while adding current Go tooling and error-chain support.
+> [!NOTE]
+> This repository is an actively maintained fork of
+> [palantir/stacktrace](https://github.com/palantir/stacktrace), which has been
+> inactive for many years. The fork preserves the original Apache-2.0-licensed
+> API while adding current Go tooling and error-chain support.
 
 ## Fork features
 
@@ -22,7 +23,7 @@ API while adding current Go tooling and error-chain support.
 
 ## Installation
 
-```sh
+```bash
 go get github.com/NdoleStudio/stacktrace@latest
 ```
 
@@ -30,13 +31,13 @@ go get github.com/NdoleStudio/stacktrace@latest
 
 This is difficult to debug:
 
-```
+```text
 Inverse tachyon pulse failed
 ```
 
 This gives the full story and is easier to debug:
 
-```
+```text
 Failed to register for villain discovery
  --- at github.com/palantir/shield/agent/discovery.go:265 (ShieldAgent.reallyRegister) ---
  --- at github.com/palantir/shield/connector/impl.go:89 (Connector.Register) ---
@@ -65,23 +66,22 @@ maximally useful.
 
 ## Example Usage
 
-<!-- pre instead of code block to support bold text inside -->
-<pre>
+```go
 func WriteAll(baseDir string, entities []Entity) error {
     err := os.MkdirAll(baseDir, 0755)
     if err != nil {
-        return <b>stacktrace.Propagate(err, "Failed to create base directory")</b>
+        return stacktrace.Propagate(err, "Failed to create base directory")
     }
     for _, ent := range entities {
         path := filepath.Join(baseDir, fileNameForEntity(ent))
         err = Write(path, ent)
         if err != nil {
-            return <b>stacktrace.Propagate(err, "Failed to write %v to %s", ent, path)</b>
+            return stacktrace.Propagate(err, "Failed to write %v to %s", ent, path)
         }
     }
     return nil
 }
-</pre>
+```
 
 ## Functions
 
@@ -95,12 +95,12 @@ As in all of these functions, the `format` and `args` work like `fmt.Errorf`.
 The message passed to Propagate should describe the action that failed,
 resulting in `err`. The canonical call looks like this:
 
-<pre>
+```go
 result, err := process(arg)
 if err != nil {
-    return nil, <b>stacktrace.Propagate(err, "Failed to process %v", arg)</b>
+    return nil, stacktrace.Propagate(err, "Failed to process %v", arg)
 }
-</pre>
+```
 
 To write the message, ask yourself "what does this call do?" What does
 `process(arg)` do? It processes ${arg}, so the message is that we failed to
@@ -115,15 +115,15 @@ corresponding to the "base directory" so we propagate with that information.
 If it is not possible to add any useful contextual information beyond what is
 already included in an error, `format` can be an empty string:
 
-<pre>
+```go
 func Something() error {
     mutex.Lock()
     defer mutex.Unlock()
 
     err := reallySomething()
-    return <b>stacktrace.Propagate(err, "")</b>
+    return stacktrace.Propagate(err, "")
 }
-</pre>
+```
 
 The purpose of `""` as opposed to a separate function is to make you feel a
 little guilty every time you do this.
@@ -136,11 +136,11 @@ This example also illustrates the behavior of Propagate when `err` is nil
 NewError is a drop-in replacement for `fmt.Errorf` that includes line number
 information. The canonical call looks like this:
 
-<pre>
+```go
 if !IsOkay(arg) {
-    return <b>stacktrace.NewError("Expected %v to be okay", arg)</b>
+    return stacktrace.NewError("Expected %v to be okay", arg)
 }
-</pre>
+```
 
 ### Error Codes
 
@@ -151,7 +151,7 @@ code.
 The type `stacktrace.ErrorCode` is a typedef for uint16. You name the set of
 error codes relevant to your application.
 
-```
+```text
 const (
     EcodeManifestNotFound = stacktrace.ErrorCode(iota)
     EcodeBadInput
@@ -171,12 +171,12 @@ An ordinary `stacktrace.Propagate` preserves the error code of an error.
 PropagateWithCode and NewErrorWithCode are analogous to Propagate and NewError
 but also attach an error code.
 
-<pre>
+```go
 _, err := os.Stat(manifestPath)
 if os.IsNotExist(err) {
-    return <b>stacktrace.PropagateWithCode(err, EcodeManifestNotFound, "")</b>
+    return stacktrace.PropagateWithCode(err, EcodeManifestNotFound, "")
 }
-</pre>
+```
 
 #### `stacktrace.NewMessageWithCode(code ErrorCode, format string, args ...any) error`
 
@@ -184,27 +184,27 @@ The error code mechanism can be useful by itself even where stack traces with
 line numbers are not required. NewMessageWithCode returns an error that prints
 just like `fmt.Errorf` with no line number, but including a code.
 
-<pre>
+```go
 ttl := req.URL.Query().Get("ttl")
 if ttl == "" {
-    return 0, <b>stacktrace.NewMessageWithCode(EcodeBadInput, "Missing ttl query parameter")</b>
+    return 0, stacktrace.NewMessageWithCode(EcodeBadInput, "Missing ttl query parameter")
 }
-</pre>
+```
 
 #### `stacktrace.GetCode(err error) ErrorCode`
 
 GetCode extracts the error code from an error.
 
-<pre>
+```go
 for i := 0; i < attempts; i++ {
     err := Do()
-    if <b>stacktrace.GetCode(err)</b> != EcodeTimeout {
+    if stacktrace.GetCode(err) != EcodeTimeout {
         return err
     }
     // try a few more times
 }
 return stacktrace.NewError("timed out after %d attempts", attempts)
-</pre>
+```
 
 GetCode returns the special value `stacktrace.NoCode` if `err` is nil or if
 there is no error code attached to `err`.
@@ -225,7 +225,7 @@ retains the original Palantir copyright notices and attribution.
 
 Contributions are welcome.
 
-```sh
+```bash
 go test -race -cover ./...
 go vet ./...
 golangci-lint run
