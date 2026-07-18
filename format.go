@@ -72,7 +72,7 @@ func (st *stacktrace) Format(f fmt.State, c rune) {
 		formatString += fmt.Sprint(precision)
 	}
 	formatString += string(c)
-	fmt.Fprintf(f, formatString, text)
+	_, _ = fmt.Fprintf(f, formatString, text)
 }
 
 func formatFull(st *stacktrace) string {
