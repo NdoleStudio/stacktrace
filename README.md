@@ -151,7 +151,7 @@ code.
 The type `stacktrace.ErrorCode` is a typedef for uint16. You name the set of
 error codes relevant to your application.
 
-```text
+```go
 const (
     EcodeManifestNotFound = stacktrace.ErrorCode(iota)
     EcodeBadInput
