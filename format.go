@@ -66,11 +66,11 @@ func (st *stacktrace) Format(f fmt.State, c rune) {
 		}
 	}
 	if width, has := f.Width(); has {
-		formatString.WriteString(fmt.Sprint(width))
+		_, _ = fmt.Fprint(&formatString, width)
 	}
 	if precision, has := f.Precision(); has {
 		formatString.WriteString(".")
-		formatString.WriteString(fmt.Sprint(precision))
+		_, _ = fmt.Fprint(&formatString, precision)
 	}
 	formatString.WriteString(string(c))
 	_, _ = fmt.Fprintf(f, formatString.String(), text)
