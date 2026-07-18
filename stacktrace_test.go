@@ -25,6 +25,32 @@ import (
 	"github.com/NdoleStudio/stacktrace"
 )
 
+type wrappedTestError struct {
+	err error
+}
+
+func (e *wrappedTestError) Error() string {
+	return "wrapped test error"
+}
+
+func (e *wrappedTestError) Unwrap() error {
+	return e.err
+}
+
+func TestUnwrap(t *testing.T) {
+	root := errors.New("root")
+	typed := &wrappedTestError{err: root}
+	inner := stacktrace.Propagate(typed, "inner")
+	outer := stacktrace.Propagate(inner, "outer")
+
+	assert.Same(t, inner, errors.Unwrap(outer))
+	assert.True(t, errors.Is(outer, root))
+
+	var target *wrappedTestError
+	assert.True(t, errors.As(outer, &target))
+	assert.Same(t, typed, target)
+}
+
 func TestMessage(t *testing.T) {
 	useFixturePaths(t)
 

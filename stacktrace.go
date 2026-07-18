@@ -46,8 +46,8 @@ information. The canonical call looks like this:
 		return stacktrace.NewError("Expected %v to be okay", arg)
 	}
 */
-func NewError(msg string, vals ...interface{}) error {
-	return create(nil, NoCode, msg, vals...)
+func NewError(format string, args ...any) error {
+	return create(nil, NoCode, format, args...)
 }
 
 /*
@@ -81,12 +81,12 @@ included in an error, msg can be an empty string:
 If cause is nil, Propagate returns nil. This allows elision of some "if err !=
 nil" checks.
 */
-func Propagate(cause error, msg string, vals ...interface{}) error {
-	if cause == nil {
+func Propagate(err error, format string, args ...any) error {
+	if err == nil {
 		// Allow calling Propagate without checking whether there is error
 		return nil
 	}
-	return create(cause, NoCode, msg, vals...)
+	return create(err, NoCode, format, args...)
 }
 
 /*
@@ -117,8 +117,8 @@ const NoCode ErrorCode = math.MaxUint16
 /*
 NewErrorWithCode is similar to NewError but also attaches an error code.
 */
-func NewErrorWithCode(code ErrorCode, msg string, vals ...interface{}) error {
-	return create(nil, code, msg, vals...)
+func NewErrorWithCode(code ErrorCode, format string, args ...any) error {
+	return create(nil, code, format, args...)
 }
 
 /*
@@ -129,12 +129,12 @@ PropagateWithCode is similar to Propagate but also attaches an error code.
 		return stacktrace.PropagateWithCode(err, EcodeManifestNotFound, "")
 	}
 */
-func PropagateWithCode(cause error, code ErrorCode, msg string, vals ...interface{}) error {
-	if cause == nil {
+func PropagateWithCode(err error, code ErrorCode, format string, args ...any) error {
+	if err == nil {
 		// Allow calling PropagateWithCode without checking whether there is error
 		return nil
 	}
-	return create(cause, code, msg, vals...)
+	return create(err, code, format, args...)
 }
 
 /*
@@ -147,9 +147,9 @@ itself even where stack traces with line numbers are not warranted.
 		return 0, stacktrace.NewMessageWithCode(EcodeBadInput, "Missing ttl query parameter")
 	}
 */
-func NewMessageWithCode(code ErrorCode, msg string, vals ...interface{}) error {
+func NewMessageWithCode(code ErrorCode, format string, args ...any) error {
 	return &stacktrace{
-		message: fmt.Sprintf(msg, vals...),
+		message: fmt.Sprintf(format, args...),
 		code:    code,
 	}
 }
@@ -185,35 +185,35 @@ type stacktrace struct {
 	line     int
 }
 
-func create(cause error, code ErrorCode, msg string, vals ...interface{}) error {
+func create(err error, code ErrorCode, format string, args ...any) error {
 	// If no error code specified, inherit error code from the cause.
 	if code == NoCode {
-		code = GetCode(cause)
+		code = GetCode(err)
 	}
 
-	err := &stacktrace{
-		message: fmt.Sprintf(msg, vals...),
-		cause:   cause,
+	st := &stacktrace{
+		message: fmt.Sprintf(format, args...),
+		cause:   err,
 		code:    code,
 	}
 
 	// Caller of create is NewError or Propagate, so user's code is 2 up.
 	pc, file, line, ok := runtime.Caller(2)
 	if !ok {
-		return err
+		return st
 	}
 	if CleanPath != nil {
 		file = CleanPath(file)
 	}
-	err.file, err.line = file, line
+	st.file, st.line = file, line
 
 	f := runtime.FuncForPC(pc)
 	if f == nil {
-		return err
+		return st
 	}
-	err.function = shortFuncName(f)
+	st.function = shortFuncName(f)
 
-	return err
+	return st
 }
 
 /* "FuncName" or "Receiver.MethodName" */
@@ -237,6 +237,11 @@ func shortFuncName(f *runtime.Func) string {
 
 func (st *stacktrace) Error() string {
 	return fmt.Sprint(st)
+}
+
+// Unwrap returns the error that the stacktrace wraps.
+func (st *stacktrace) Unwrap() error {
+	return st.cause
 }
 
 // ExitCode returns the exit code associated with the stacktrace error based on its error code. If the error code is
