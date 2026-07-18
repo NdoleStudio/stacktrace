@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/palantir/stacktrace/cleanpath"
+	"github.com/NdoleStudio/stacktrace/cleanpath"
 )
 
 func TestRemoveGoPath(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRemoveGoPath(t *testing.T) {
 			// single matching dir in gopath
 			gopath:   []string{"/some/dir"},
 			path:     "/some/dir/src/pkg/prog.go",
-			expected: "pkg/prog.go",
+			expected: filepath.FromSlash("pkg/prog.go"),
 		},
 		{
 			// nonmatching dir in gopath
@@ -39,13 +39,13 @@ func TestRemoveGoPath(t *testing.T) {
 			// multiple matching dirs in gopath, shorter first
 			gopath:   []string{"/some", "/some/src/dir"},
 			path:     "/some/src/dir/src/pkg/prog.go",
-			expected: "pkg/prog.go",
+			expected: filepath.FromSlash("pkg/prog.go"),
 		},
 		{
 			// multiple matching dirs in gopath, longer first
 			gopath:   []string{"/some/src/dir", "/some"},
 			path:     "/some/src/dir/src/pkg/prog.go",
-			expected: "pkg/prog.go",
+			expected: filepath.FromSlash("pkg/prog.go"),
 		},
 	} {
 		gopath := strings.Join(testcase.gopath, string(filepath.ListSeparator))

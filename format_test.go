@@ -22,13 +22,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/palantir/stacktrace"
+	"github.com/NdoleStudio/stacktrace"
 )
 
 func TestFormat(t *testing.T) {
+	useFixturePaths(t)
+
 	plainErr := errors.New("plain")
 	stacktraceErr := stacktrace.Propagate(plainErr, "decorated")
 	digits := regexp.MustCompile(`\d`)
+	fullTrace := fmt.Sprintf(
+		"decorated\n --- at %s:## (TestFormat) ---\nCaused by: plain",
+		fixturePath("format_test.go"),
+	)
 
 	for _, test := range []struct {
 		format             stacktrace.Format
@@ -40,19 +46,19 @@ func TestFormat(t *testing.T) {
 			format:             stacktrace.FormatFull,
 			specifier:          "%v",
 			expectedPlain:      "plain",
-			expectedStacktrace: "decorated\n --- at github.com/palantir/stacktrace/format_test.go:## (TestFormat) ---\nCaused by: plain",
+			expectedStacktrace: fullTrace,
 		},
 		{
 			format:             stacktrace.FormatFull,
 			specifier:          "%q",
 			expectedPlain:      "\"plain\"",
-			expectedStacktrace: "\"decorated\\n --- at github.com/palantir/stacktrace/format_test.go:## (TestFormat) ---\\nCaused by: plain\"",
+			expectedStacktrace: fmt.Sprintf("%q", fullTrace),
 		},
 		{
 			format:             stacktrace.FormatFull,
 			specifier:          "%105s",
 			expectedPlain:      "                                                                                                    plain",
-			expectedStacktrace: "     decorated\n --- at github.com/palantir/stacktrace/format_test.go:## (TestFormat) ---\nCaused by: plain",
+			expectedStacktrace: fmt.Sprintf("%105s", fullTrace),
 		},
 		{
 			format:             stacktrace.FormatFull,
@@ -82,7 +88,7 @@ func TestFormat(t *testing.T) {
 			format:             stacktrace.FormatBrief,
 			specifier:          "%+s",
 			expectedPlain:      "plain",
-			expectedStacktrace: "decorated\n --- at github.com/palantir/stacktrace/format_test.go:## (TestFormat) ---\nCaused by: plain",
+			expectedStacktrace: fullTrace,
 		},
 	} {
 		stacktrace.DefaultFormat = test.format

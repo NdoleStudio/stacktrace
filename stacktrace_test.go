@@ -22,10 +22,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/palantir/stacktrace"
+	"github.com/NdoleStudio/stacktrace"
 )
 
 func TestMessage(t *testing.T) {
+	useFixturePaths(t)
+
 	err := startDoing()
 	err = PublicObj{}.DoPublic(err)
 	err = PublicObj{}.doPrivate(err)
@@ -36,15 +38,15 @@ func TestMessage(t *testing.T) {
 
 	expected := strings.Join([]string{
 		"so closed",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:51 (doClosure.func1) ---",
+		fmt.Sprintf(" --- at %s:51 (doClosure.func1) ---", fixturePath("functions_for_test.go")),
 		"Caused by: pointedly",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:46 (ptrObj.doPtr) ---",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:42 (privateObj.doPrivate) ---",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:38 (privateObj.DoPublic) ---",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:34 (PublicObj.doPrivate) ---",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:30 (PublicObj.DoPublic) ---",
+		fmt.Sprintf(" --- at %s:46 (ptrObj.doPtr) ---", fixturePath("functions_for_test.go")),
+		fmt.Sprintf(" --- at %s:42 (privateObj.doPrivate) ---", fixturePath("functions_for_test.go")),
+		fmt.Sprintf(" --- at %s:38 (privateObj.DoPublic) ---", fixturePath("functions_for_test.go")),
+		fmt.Sprintf(" --- at %s:34 (PublicObj.doPrivate) ---", fixturePath("functions_for_test.go")),
+		fmt.Sprintf(" --- at %s:30 (PublicObj.DoPublic) ---", fixturePath("functions_for_test.go")),
 		"Caused by: failed to start doing",
-		" --- at github.com/palantir/stacktrace/functions_for_test.go:26 (startDoing) ---",
+		fmt.Sprintf(" --- at %s:26 (startDoing) ---", fixturePath("functions_for_test.go")),
 	}, "\n")
 	stacktrace.DefaultFormat = stacktrace.FormatFull
 	assert.Equal(t, expected, err.Error())
