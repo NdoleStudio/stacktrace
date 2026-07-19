@@ -57,22 +57,23 @@ func (st *stacktrace) Format(f fmt.State, c rune) {
 		}[DefaultFormat](st)
 	}
 
-	formatString := "%"
+	var formatString strings.Builder
+	formatString.WriteString("%")
 	// keep the flags recognized by fmt package
 	for _, flag := range "-+# 0" {
 		if f.Flag(int(flag)) {
-			formatString += string(flag)
+			formatString.WriteString(string(flag))
 		}
 	}
 	if width, has := f.Width(); has {
-		formatString += fmt.Sprint(width)
+		_, _ = fmt.Fprint(&formatString, width)
 	}
 	if precision, has := f.Precision(); has {
-		formatString += "."
-		formatString += fmt.Sprint(precision)
+		formatString.WriteString(".")
+		_, _ = fmt.Fprint(&formatString, precision)
 	}
-	formatString += string(c)
-	_, _ = fmt.Fprintf(f, formatString, text)
+	formatString.WriteString(string(c))
+	_, _ = fmt.Fprintf(f, formatString.String(), text)
 }
 
 func formatFull(st *stacktrace) string {

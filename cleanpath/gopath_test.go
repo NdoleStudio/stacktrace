@@ -1,7 +1,6 @@
 package cleanpath_test
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -49,8 +48,7 @@ func TestRemoveGoPath(t *testing.T) {
 		},
 	} {
 		gopath := strings.Join(testcase.gopath, string(filepath.ListSeparator))
-		err := os.Setenv("GOPATH", gopath)
-		assert.NoError(t, err, "error setting gopath")
+		t.Setenv("GOPATH", gopath)
 
 		cleaned := cleanpath.RemoveGoPath(testcase.path)
 		assert.Equal(t, testcase.expected, cleaned, "testcase: %+v", testcase)
