@@ -1,6 +1,7 @@
 # Stacktrace
 
 [![CI](https://github.com/NdoleStudio/stacktrace/actions/workflows/ci.yml/badge.svg)](https://github.com/NdoleStudio/stacktrace/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/NdoleStudio/stacktrace/graph/badge.svg)](https://codecov.io/gh/NdoleStudio/stacktrace)
 [![Go Reference](https://pkg.go.dev/badge/github.com/NdoleStudio/stacktrace.svg)](https://pkg.go.dev/github.com/NdoleStudio/stacktrace)
 [![License](https://img.shields.io/github/license/NdoleStudio/stacktrace)](LICENSE)
 
