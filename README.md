@@ -77,7 +77,7 @@ func WriteAll(baseDir string, entities []Entity) error {
         path := filepath.Join(baseDir, fileNameForEntity(ent))
         err = Write(path, ent)
         if err != nil {
-            return stacktrace.Propagate(err, "Failed to write %v to %s", ent, path)
+            return stacktrace.Propagatef(err, "Failed to write %v to %s", ent, path)
         }
     }
     return nil
@@ -86,20 +86,21 @@ func WriteAll(baseDir string, entities []Entity) error {
 
 ## Functions
 
-#### `stacktrace.Propagate(err error, format string, args ...any) error`
+#### `stacktrace.Propagatef(err error, format string, args ...any) error`
 
-Propagate wraps an error to include line number information. This is going to be
-your most common stacktrace call.
+Propagatef wraps an error with a formatted message and line number
+information. Use `Propagate` when the message has no formatting arguments.
+Both functions return `nil` when `err` is nil.
 
-As in all of these functions, the `format` and `args` work like `fmt.Errorf`.
+The `format` and `args` work like `fmt.Sprintf`.
 
-The message passed to Propagate should describe the action that failed,
+The message passed to Propagatef should describe the action that failed,
 resulting in `err`. The canonical call looks like this:
 
 ```go
 result, err := process(arg)
 if err != nil {
-    return nil, stacktrace.Propagate(err, "Failed to process %v", arg)
+    return nil, stacktrace.Propagatef(err, "Failed to process %v", arg)
 }
 ```
 
@@ -132,14 +133,19 @@ little guilty every time you do this.
 This example also illustrates the behavior of Propagate when `err` is nil
 &ndash; it returns nil as well. There is no need to check `if err != nil`.
 
-#### `stacktrace.NewError(format string, args ...any) error`
+#### `stacktrace.NewErrorf(format string, args ...any) error`
 
-NewError is a drop-in replacement for `fmt.Errorf` that includes line number
-information. The canonical call looks like this:
+NewErrorf is a drop-in replacement for `fmt.Errorf` that includes line number
+information. Use `NewError` when the message has no formatting arguments.
+
+The `*f` helpers format their messages like `fmt.Sprintf`. Their counterparts
+without `f` remain supported for compatibility.
+
+The canonical call looks like this:
 
 ```go
 if !IsOkay(arg) {
-    return stacktrace.NewError("Expected %v to be okay", arg)
+    return stacktrace.NewErrorf("Expected %v to be okay", arg)
 }
 ```
 
@@ -165,30 +171,32 @@ using that. NoCode is the error code of errors with no code explicitly attached.
 
 An ordinary `stacktrace.Propagate` preserves the error code of an error.
 
-#### `stacktrace.PropagateWithCode(err error, code ErrorCode, format string, args ...any) error`
+#### `stacktrace.PropagateWithCodef(err error, code ErrorCode, format string, args ...any) error`
 
-#### `stacktrace.NewErrorWithCode(code ErrorCode, format string, args ...any) error`
+#### `stacktrace.NewErrorWithCodef(code ErrorCode, format string, args ...any) error`
 
-PropagateWithCode and NewErrorWithCode are analogous to Propagate and NewError
-but also attach an error code.
+#### `stacktrace.NewMessageWithCodef(code ErrorCode, format string, args ...any) error`
+
+PropagateWithCodef, NewErrorWithCodef, and NewMessageWithCodef are analogous to
+Propagatef, NewErrorf, and NewMessageWithCode respectively, but also attach an
+error code. Their non-`f` counterparts remain supported for compatibility.
+PropagateWithCodef retains nil propagation.
 
 ```go
 _, err := os.Stat(manifestPath)
 if os.IsNotExist(err) {
-    return stacktrace.PropagateWithCode(err, EcodeManifestNotFound, "")
+    return stacktrace.PropagateWithCodef(err, EcodeManifestNotFound, "")
 }
 ```
 
-#### `stacktrace.NewMessageWithCode(code ErrorCode, format string, args ...any) error`
-
 The error code mechanism can be useful by itself even where stack traces with
-line numbers are not required. NewMessageWithCode returns an error that prints
-just like `fmt.Errorf` with no line number, but including a code.
+line numbers are not required. `NewMessageWithCodef` returns an error that
+prints just like `fmt.Sprintf`, but including a code.
 
 ```go
 ttl := req.URL.Query().Get("ttl")
 if ttl == "" {
-    return 0, stacktrace.NewMessageWithCode(EcodeBadInput, "Missing ttl query parameter")
+    return 0, stacktrace.NewMessageWithCodef(EcodeBadInput, "Missing ttl query parameter")
 }
 ```
 
@@ -204,7 +212,7 @@ for i := 0; i < attempts; i++ {
     }
     // try a few more times
 }
-return stacktrace.NewError("timed out after %d attempts", attempts)
+return stacktrace.NewErrorf("timed out after %d attempts", attempts)
 ```
 
 GetCode returns the special value `stacktrace.NoCode` if `err` is nil or if
