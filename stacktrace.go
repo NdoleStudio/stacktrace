@@ -58,7 +58,7 @@ func NewErrorf(format string, args ...any) error {
 }
 
 /*
-Propagate wraps an error to include line number information. The msg and vals
+Propagate wraps an error to include line number information. The format and args
 arguments work like the ones for fmt.Sprintf.
 
 The message passed to Propagate should describe the action that failed,
