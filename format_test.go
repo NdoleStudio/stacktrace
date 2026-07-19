@@ -101,3 +101,28 @@ func TestFormat(t *testing.T) {
 		assert.Equal(t, test.expectedStacktrace, actualStacktrace)
 	}
 }
+
+func TestFormatPrecision(t *testing.T) {
+	original := stacktrace.DefaultFormat
+	stacktrace.DefaultFormat = stacktrace.FormatBrief
+	t.Cleanup(func() {
+		stacktrace.DefaultFormat = original
+	})
+
+	err := stacktrace.Propagate(errors.New("plain"), "decorated")
+
+	assert.Equal(t, "dec", fmt.Sprintf("%.3s", err))
+}
+
+func TestFormatBriefNestedStacktrace(t *testing.T) {
+	original := stacktrace.DefaultFormat
+	stacktrace.DefaultFormat = stacktrace.FormatBrief
+	t.Cleanup(func() {
+		stacktrace.DefaultFormat = original
+	})
+
+	inner := stacktrace.Propagate(errors.New("root"), "inner")
+	outer := stacktrace.Propagate(inner, "")
+
+	assert.Equal(t, "inner: root", outer.Error())
+}

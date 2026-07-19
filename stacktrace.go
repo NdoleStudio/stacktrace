@@ -199,8 +199,14 @@ func create(err error, code ErrorCode, format string, args ...any) error {
 
 	// Caller of create is NewError or Propagate, so user's code is 2 up.
 	pc, file, line, ok := runtime.Caller(2)
+	setCallSite(st, pc, file, line, ok)
+
+	return st
+}
+
+func setCallSite(st *stacktrace, pc uintptr, file string, line int, ok bool) {
 	if !ok {
-		return st
+		return
 	}
 	if CleanPath != nil {
 		file = CleanPath(file)
@@ -209,11 +215,9 @@ func create(err error, code ErrorCode, format string, args ...any) error {
 
 	f := runtime.FuncForPC(pc)
 	if f == nil {
-		return st
+		return
 	}
 	st.function = shortFuncName(f)
-
-	return st
 }
 
 /* "FuncName" or "Receiver.MethodName" */

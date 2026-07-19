@@ -126,3 +126,30 @@ func TestPropagateNil(t *testing.T) {
 
 	assert.Equal(t, stacktrace.NoCode, stacktrace.GetCode(err))
 }
+
+func TestExitCode(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected int
+	}{
+		{
+			name:     "no code",
+			err:      stacktrace.NewError("err"),
+			expected: 1,
+		},
+		{
+			name:     "explicit code",
+			err:      stacktrace.NewErrorWithCode(EcodeNotImplemented, "err"),
+			expected: int(EcodeNotImplemented),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			exitCoder, ok := test.err.(interface{ ExitCode() int })
+			assert.True(t, ok)
+			assert.Equal(t, test.expected, exitCoder.ExitCode())
+		})
+	}
+}
