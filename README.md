@@ -7,7 +7,7 @@
 
 Stacktrace adds compact, contextual call-site information to Go errors.
 
-> [!NOTE]
+> [!IMPORTANT]
 > This repository is an actively maintained fork of
 > [palantir/stacktrace](https://github.com/palantir/stacktrace), which has been
 > inactive for many years. The fork preserves the original Apache-2.0-licensed
@@ -135,11 +135,15 @@ This example also illustrates the behavior of Propagate when `err` is nil
 
 #### `stacktrace.NewErrorf(format string, args ...any) error`
 
-NewErrorf is a drop-in replacement for `fmt.Errorf` that includes line number
-information. Use `NewError` when the message has no formatting arguments.
+NewErrorf creates an error with a formatted message and line number information.
+Use `NewError` when the message has no formatting arguments.
 
 The `*f` helpers format their messages like `fmt.Sprintf`. Their counterparts
 without `f` remain supported for compatibility.
+
+> [!NOTE]
+> Unlike `fmt.Errorf`, `%w` is not supported; use `Propagate` or `Propagatef` to
+> wrap a cause.
 
 The canonical call looks like this:
 
