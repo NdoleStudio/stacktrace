@@ -179,24 +179,26 @@ An ordinary `stacktrace.Propagate` preserves the error code of an error.
 
 PropagateWithCodef, NewErrorWithCodef, and NewMessageWithCodef are analogous to
 Propagatef, NewErrorf, and NewMessageWithCode respectively, but also attach an
-error code. Their non-`f` counterparts remain supported for compatibility.
-PropagateWithCodef retains nil propagation.
+error code. Propagate and Propagatef inherit existing codes, while
+PropagateWithCode and PropagateWithCodef override them with the supplied code.
+Their non-`f` counterparts remain supported for compatibility. PropagateWithCodef
+retains nil propagation.
 
 ```go
 _, err := os.Stat(manifestPath)
 if os.IsNotExist(err) {
-    return stacktrace.PropagateWithCodef(err, EcodeManifestNotFound, "")
+    return stacktrace.PropagateWithCode(err, EcodeManifestNotFound, "")
 }
 ```
 
 The error code mechanism can be useful by itself even where stack traces with
 line numbers are not required. `NewMessageWithCodef` returns an error that
-prints just like `fmt.Sprintf`, but including a code.
+formats its message like `fmt.Sprintf`, but including a code.
 
 ```go
 ttl := req.URL.Query().Get("ttl")
 if ttl == "" {
-    return 0, stacktrace.NewMessageWithCodef(EcodeBadInput, "Missing ttl query parameter")
+    return 0, stacktrace.NewMessageWithCode(EcodeBadInput, "Missing ttl query parameter")
 }
 ```
 
