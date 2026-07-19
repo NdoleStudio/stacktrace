@@ -51,6 +51,13 @@ func NewError(format string, args ...any) error {
 }
 
 /*
+NewErrorf is the formatting variant of NewError.
+*/
+func NewErrorf(format string, args ...any) error {
+	return create(nil, NoCode, format, args...)
+}
+
+/*
 Propagate wraps an error to include line number information. The msg and vals
 arguments work like the ones for fmt.Errorf.
 
@@ -90,6 +97,17 @@ func Propagate(err error, format string, args ...any) error {
 }
 
 /*
+Propagatef is the formatting variant of Propagate.
+*/
+func Propagatef(err error, format string, args ...any) error {
+	if err == nil {
+		// Allow calling Propagatef without checking whether there is error
+		return nil
+	}
+	return create(err, NoCode, format, args...)
+}
+
+/*
 ErrorCode is a code that can be attached to an error as it is passed/propagated
 up the stack.
 
@@ -122,6 +140,13 @@ func NewErrorWithCode(code ErrorCode, format string, args ...any) error {
 }
 
 /*
+NewErrorWithCodef is the formatting variant of NewErrorWithCode.
+*/
+func NewErrorWithCodef(code ErrorCode, format string, args ...any) error {
+	return create(nil, code, format, args...)
+}
+
+/*
 PropagateWithCode is similar to Propagate but also attaches an error code.
 
 	_, err := os.Stat(manifestPath)
@@ -138,6 +163,17 @@ func PropagateWithCode(err error, code ErrorCode, format string, args ...any) er
 }
 
 /*
+PropagateWithCodef is the formatting variant of PropagateWithCode.
+*/
+func PropagateWithCodef(err error, code ErrorCode, format string, args ...any) error {
+	if err == nil {
+		// Allow calling PropagateWithCodef without checking whether there is error
+		return nil
+	}
+	return create(err, code, format, args...)
+}
+
+/*
 NewMessageWithCode returns an error that prints just like fmt.Errorf with no
 line number, but including a code. The error code mechanism can be useful by
 itself even where stack traces with line numbers are not warranted.
@@ -148,6 +184,16 @@ itself even where stack traces with line numbers are not warranted.
 	}
 */
 func NewMessageWithCode(code ErrorCode, format string, args ...any) error {
+	return &stacktrace{
+		message: fmt.Sprintf(format, args...),
+		code:    code,
+	}
+}
+
+/*
+NewMessageWithCodef is the formatting variant of NewMessageWithCode.
+*/
+func NewMessageWithCodef(code ErrorCode, format string, args ...any) error {
 	return &stacktrace{
 		message: fmt.Sprintf(format, args...),
 		code:    code,

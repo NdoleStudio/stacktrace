@@ -51,3 +51,19 @@ func doClosure(err error) error {
 		return stacktrace.Propagate(err, "so closed")
 	}()
 }
+
+func newErrorfAtCallSite() error {
+	return stacktrace.NewErrorf("new %d", 7)
+}
+
+func propagatefAtCallSite(err error) error {
+	return stacktrace.Propagatef(err, "propagate %d", 7)
+}
+
+func newErrorWithCodefAtCallSite() error {
+	return stacktrace.NewErrorWithCodef(EcodeInvalidVillain, "coded %d", 7)
+}
+
+func propagateWithCodefAtCallSite(err error) error {
+	return stacktrace.PropagateWithCodef(err, EcodeNotFastEnough, "coded propagate %d", 7)
+}
