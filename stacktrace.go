@@ -39,8 +39,8 @@ stacktraces, use something like:
 var CleanPath = cleanpath.RemoveGoPath
 
 /*
-NewError is a drop-in replacement for fmt.Errorf that includes line number
-information. The canonical call looks like this:
+NewError creates an error with a formatted message and line number information.
+The canonical call looks like this:
 
 	if !IsOkay(arg) {
 		return stacktrace.NewError("Expected %v to be okay", arg)
@@ -51,8 +51,15 @@ func NewError(format string, args ...any) error {
 }
 
 /*
-Propagate wraps an error to include line number information. The msg and vals
-arguments work like the ones for fmt.Errorf.
+NewErrorf is the formatting variant of NewError.
+*/
+func NewErrorf(format string, args ...any) error {
+	return create(nil, NoCode, format, args...)
+}
+
+/*
+Propagate wraps an error to include line number information. The format and args
+arguments work like the ones for fmt.Sprintf.
 
 The message passed to Propagate should describe the action that failed,
 resulting in the cause. The canonical call looks like this:
@@ -83,7 +90,18 @@ nil" checks.
 */
 func Propagate(err error, format string, args ...any) error {
 	if err == nil {
-		// Allow calling Propagate without checking whether there is error
+		// Allow calling Propagate without checking whether there is an error
+		return nil
+	}
+	return create(err, NoCode, format, args...)
+}
+
+/*
+Propagatef is the formatting variant of Propagate.
+*/
+func Propagatef(err error, format string, args ...any) error {
+	if err == nil {
+		// Allow calling Propagatef without checking whether there is an error
 		return nil
 	}
 	return create(err, NoCode, format, args...)
@@ -122,6 +140,13 @@ func NewErrorWithCode(code ErrorCode, format string, args ...any) error {
 }
 
 /*
+NewErrorWithCodef is the formatting variant of NewErrorWithCode.
+*/
+func NewErrorWithCodef(code ErrorCode, format string, args ...any) error {
+	return create(nil, code, format, args...)
+}
+
+/*
 PropagateWithCode is similar to Propagate but also attaches an error code.
 
 	_, err := os.Stat(manifestPath)
@@ -131,16 +156,27 @@ PropagateWithCode is similar to Propagate but also attaches an error code.
 */
 func PropagateWithCode(err error, code ErrorCode, format string, args ...any) error {
 	if err == nil {
-		// Allow calling PropagateWithCode without checking whether there is error
+		// Allow calling PropagateWithCode without checking whether there is an error
 		return nil
 	}
 	return create(err, code, format, args...)
 }
 
 /*
-NewMessageWithCode returns an error that prints just like fmt.Errorf with no
-line number, but including a code. The error code mechanism can be useful by
-itself even where stack traces with line numbers are not warranted.
+PropagateWithCodef is the formatting variant of PropagateWithCode.
+*/
+func PropagateWithCodef(err error, code ErrorCode, format string, args ...any) error {
+	if err == nil {
+		// Allow calling PropagateWithCodef without checking whether there is an error
+		return nil
+	}
+	return create(err, code, format, args...)
+}
+
+/*
+NewMessageWithCode returns an error whose message is formatted like fmt.Sprintf
+with no line number, but including a code. The error code mechanism can be
+useful by itself even where stack traces with line numbers are not warranted.
 
 	ttl := req.URL.Query().Get("ttl")
 	if ttl == "" {
@@ -148,6 +184,16 @@ itself even where stack traces with line numbers are not warranted.
 	}
 */
 func NewMessageWithCode(code ErrorCode, format string, args ...any) error {
+	return &stacktrace{
+		message: fmt.Sprintf(format, args...),
+		code:    code,
+	}
+}
+
+/*
+NewMessageWithCodef is the formatting variant of NewMessageWithCode.
+*/
+func NewMessageWithCodef(code ErrorCode, format string, args ...any) error {
 	return &stacktrace{
 		message: fmt.Sprintf(format, args...),
 		code:    code,
